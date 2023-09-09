@@ -1,5 +1,6 @@
 async function dialogo9(client, message) {
-  const texto = "*Por gentileza informe a forma de pagamento:*";
+  const texto =
+    "*Por gentileza informe a forma de pagamento:*\n1 - Dinheiro  2 - Cartão  3 - PIX";
   await client
     .sendText(message.from, texto)
     .then(() => {

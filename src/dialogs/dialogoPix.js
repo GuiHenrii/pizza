@@ -1,7 +1,5 @@
-async function dialogocl2(client, message) {
-  const texto =
-    "*Certo, vou encaminhar para o nosso atendente.* *Ele responderá a você em breve.*";
-
+async function dialogoPix(client, message) {
+  const texto = "*Chave PIX: 99999999999*\n *ATENÇÃO:*\n*Por favor envie o comprovante para prosseguir!*";
   await client
     .sendText(message.from, texto)
     .then(async () => {
@@ -12,4 +10,5 @@ async function dialogocl2(client, message) {
       console.error("Erro ao enviar mensagem: ", erro); //retorna o objeto de erro
     });
 }
-export default dialogocl2;
+
+export default dialogoPix;

@@ -9,5 +9,4 @@ async function dialogo11 (client, message) {
       console.error("Erro ao enviar mensagem", error);
     });
   };
-
-export default dialogo11;
+  export default dialogo11;

@@ -1,6 +1,5 @@
 async function dialogoPedaco(client, message, pizza) {
-  
-  const texto = `Você escolheu ${ pizza } Quantos pedaços você deseja 4 pedaços ou 8 pedaços?`;
+  const texto = `Você escolheu ${pizza} Quantos pedaços você deseja 4 pedaços ou 8 pedaços?`;
   await client
     .sendText(message.from, texto)
     .then(() => {

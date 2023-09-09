@@ -1,4 +1,4 @@
-import { create, Whatsapp } from "venom-bot";
+import venom from "venom-bot";
 import fs from "fs";
 import path from "path";
 import dialogocl2 from "./dialogs/dialogocl2.js";
@@ -14,9 +14,10 @@ import dialogoPedaco from "./dialogs/dialogoPedaco.js";
 import dialogoendereco from "./dialogs/dialogoendereco.js";
 import { parse } from "path";
 import dialogo9 from "./dialogs/dialogo9.js";
+import dialogoPix from "./dialogs/dialogoPix.js";
 
 const promo = fs.readFileSync("./imagens/promo.PNG");
-
+const sessionName = "Portfolio";
 function start(client) {
   console.log("Cliente Venom iniciado!");
 
@@ -79,77 +80,33 @@ function start(client) {
       //  -------------------- Envia cardapio
       else if (message.body === "1" && atendimento[tel].stage === 2) {
         dialogo2(client, message);
+        atendimento[tel].stage = 400;
+      } else if (message.body === "0" && atendimento[tel].stage === 400) {
+        dialogo1(client, message);
+        atendimento[tel].stage = 2;
       }
       //  -------------------- Envia as promoções
       else if (message.body === "2" && atendimento[tel].stage === 2) {
         client
           .sendImage(
             message.from,
-            "./imagens/promo.png",
-            "image-name",
-            "Promoção da semana"
+            "./imagens/promo2.png",
+            "",
+            "Promo da semana\n\nDigite '0' Para voltar ao menu inicial."
           )
           .then((result) => {
-            client
-              .sendImage(
-                message.from,
-                "./imagens/promo2.png",
-                "image-name",
-                "Promoção da semana"
-              )
-              .then((result) => {
-                client
-                  .sendImage(
-                    message.from,
-                    "./imagens/promo3.png",
-                    "image-name",
-                    "Promoção da semana"
-                  )
-                  .then((result) => {
-                    client
-                      .sendImage(
-                        message.from,
-                        "./imagens/promo4.png",
-                        "image-name",
-                        "Promoção da semana"
-                      )
-                      .then((result) => {
-                        console.log("Result: ", result); //return object success
-                      })
-                      .catch((erro) => {
-                        console.error("Error when sending: ", erro); //return object error
-                      });
-                  })
-                  .catch((erro) => {
-                    console.error("Error when sending: ", erro); //return object error
-                  });
-              })
-              .catch((erro) => {
-                console.error("Error when sending: ", erro); //return object error
-              }); //return object success
+            console.log("Result: ", result); //return object success
           })
           .catch((erro) => {
             console.error("Error when sending: ", erro); //return object error
           });
       }
-      //  -------------------- Faz o pedido
+
+      //  -------------------- Bloco de pedidos
       else if (message.body === "3" && atendimento[tel].stage === 2) {
         dialogo3(client, message);
         atendimento[tel].stage = 3;
-      }
-
-      //  -------------------- Faz abertura para pedido especial
-      else if (message.body === "4" && atendimento[tel].stage === 2) {
-        dialogo6(client, message);
-        atendimento[tel].stage = 90;
-      }
-      //Abertura pra atendente
-      else if (message.body === "5" && atendimento[tel].stage === 2) {
-        dialogocl2(client, message);
-        atendimento[tel].stage = 90;
-      }
-      //recebe o nome do cliente
-      else if (message.body && atendimento[tel].stage === 3) {
+      } else if (message.body && atendimento[tel].stage === 3) {
         atendimento.cliente = message.body;
         dialogo4(client, message);
         atendimento[tel].stage = 4;
@@ -189,46 +146,18 @@ function start(client) {
         //chama o end acaso não queira mais nada
       } else if (message.body === "2" && atendimento[tel].stage === 6) {
         dialogo9(client, message);
-        atendimento[tel].stage = 15;
-      } else if (message.body && atendimento[tel].stage === 15) {
         atendimento.pag = message.body;
+        atendimento[tel].stage = 15;
+      } else if (message.body === "3" && atendimento[tel].stage === 15) {
+        dialogoPix(client, message);
+        atendimento[tel].stage = 16;
+      } else if (message.body && atendimento[tel].stage === 16) {
         dialogoendereco(client, message);
         atendimento[tel].stage = 30;
-      }
-      // ----------Encerra atendimento
-      else if (message.body === "6" && atendimento[tel].stage === 2) {
-        atendimento.end = message.body;
-        //encerra o atendimento
-        dialogoencerra(client, message);
-        atendimento[tel].stage = 16;
-      }
-      // Salvar dados em json
-      else if (message.body === "1" && atendimento[tel].stage === 12) {
-        atendimento[tel].stage = 19;
-        // Crie um objeto temporário contendo apenas as propriedades que têm valores
-        const tempObj = {
-          tel: message.from,
-          cliente: atendimento.cliente,
-          numeroPizza: atendimento[tel].numeroPizza,
-          end: atendimento.end,
-          stage: atendimento[tel].stage,
-        };
-
-        salvaContato(tempObj); // Passe o objeto temporário para a função salvaContato
-        client
-          .sendText(
-            message.from,
-            `Obrigado, Seu pedido já está sendo preparado, tempo de entrega no máximo 60 minutos. Agradecemos pela preferência🍕 Bom Apetite!!!`
-          )
-          .then(() => {
-            console.log("aqui caiu");
-          })
-          .catch((error) => {
-            console.error("Error when sending message", error);
-          });
-        atendimento[tel].stage = 31;
-      }
-      //Ajuste do nome do cliente
+      } else if (message.body && atendimento[tel].stage === 15) {
+        dialogoendereco(client, message);
+        atendimento[tel].stage = 30;
+      } //Ajuste do nome do cliente
       else if (message.body && atendimento[tel].stage === 11) {
         atendimento.cliente = message.body;
         const cliente = atendimento.cliente;
@@ -291,55 +220,104 @@ function start(client) {
             console.error("Erro ao enviar a mensagem.", error);
           });
         atendimento[tel].stage = 12;
-      } // ------------------ Ajustes do pedido -----------------
-      else if (message.body === "2" && atendimento[tel].stage === 12) {
-        // Pergunta o que esta errado
-        const textomensagem =
-          "Me informe por favor o que ficou errado\n\n 7 - nome \n 8 - numero da pizza\n 9 - Endereço";
+      }
+      // Salvar dados em json
+      else if (message.body === "1" && atendimento[tel].stage === 12) {
+        atendimento[tel].stage = 19;
+        // Crie um objeto temporário contendo apenas as propriedades que têm valores
+        const tempObj = {
+          tel: message.from,
+          cliente: atendimento.cliente,
+          numeroPizza: atendimento[tel].numeroPizza,
+          end: atendimento.end,
+          stage: atendimento[tel].stage,
+        };
+
+        salvaContato(tempObj); // Passe o objeto temporário para a função salvaContato
         client
-          .sendText(message.from, textomensagem)
+          .sendText(
+            message.from,
+            `Obrigado, Seu pedido já está sendo preparado, tempo de entrega no máximo 60 minutos. Agradecemos pela preferência🍕 Bom Apetite!!!`
+          )
           .then(() => {
-            console.log("Message sent.");
+            console.log("aqui caiu");
           })
           .catch((error) => {
             console.error("Error when sending message", error);
           });
-        atendimento[tel].stage = 10;
-      } else if (message.body === "7" && atendimento[tel].stage === 10) {
-        // chama função de preenchimento do nome
-        dialogo3(client, message);
-        atendimento[tel].stage = 11;
-      } else if (message.body === "8" && atendimento[tel].stage === 10) {
-        // Altera Pedido numero da Pizza
-        atendimento[tel].numeroPizza = [];
-        atendimento[tel].valor = [];
-        dialogo4(client, message);
-        atendimento[tel].stage = 4;
-        //Altera o cep
-      } else if (message.body === "9" && atendimento[tel].stage === 10) {
-        dialogoendereco(client, message);
-        atendimento[tel].stage = 30;
-      } //------------------- Final do ajuste ---------------
-      // Caso algo de errado
-      else {
-        atendimento[tel].stage = 1;
-        const texto =
-          "Vamos reiniciar o seu atendimento, Por favor digite 'OK'";
-        client
-          .sendText(message.from, texto)
-          .then(() => {
-            console.log("Mensagem enviada.");
-          })
-          .catch((error) => {
-            console.error("Erro ao enviar mensagem", error);
-          });
+        atendimento[tel].stage = 31;
       }
+    } // ------------------ Ajustes do pedido -----------------
+    else if (message.body === "2" && atendimento[tel].stage === 12) {
+      // Pergunta o que esta errado
+      const textomensagem =
+        "Me informe por favor o que ficou errado\n\n 7 - nome \n 8 - numero da pizza\n 9 - Endereço";
+      client
+        .sendText(message.from, textomensagem)
+        .then(() => {
+          console.log("Message sent.");
+        })
+        .catch((error) => {
+          console.error("Error when sending message", error);
+        });
+      atendimento[tel].stage = 10;
+    } else if (message.body === "7" && atendimento[tel].stage === 10) {
+      // chama função de preenchimento do nome
+      dialogo3(client, message);
+      atendimento[tel].stage = 11;
+    } else if (message.body === "8" && atendimento[tel].stage === 10) {
+      // Altera Pedido numero da Pizza
+      atendimento[tel].numeroPizza = [];
+      atendimento[tel].valor = [];
+      dialogo4(client, message);
+      atendimento[tel].stage = 4;
+      //Altera o cep
+    } else if (message.body === "9" && atendimento[tel].stage === 10) {
+      dialogoendereco(client, message);
+      atendimento[tel].stage = 30;
+    }
+    //----------Finaliza bloco de pedidos
+
+    // Salvar dados em json
+
+    //  -------------------- Faz abertura para pedido especial
+    else if (message.body === "4" && atendimento[tel].stage === 2) {
+      dialogo6(client, message);
+      atendimento[tel].stage = 90;
+    }
+    //Abertura pra atendente
+    else if (message.body === "5" && atendimento[tel].stage === 2) {
+      dialogocl2(client, message);
+      atendimento[tel].stage = 90;
+    }
+
+    // ----------Encerra atendimento
+    else if (message.body === "6" && atendimento[tel].stage === 2) {
+      atendimento.end = message.body;
+      //encerra o atendimento
+      dialogoencerra(client, message);
+      atendimento[tel].stage = 16;
+    } //------------------- Final do ajuste ---------------
+    // Caso algo de errado
+    else {
+      atendimento[tel].stage = 1;
+      const texto = "Vamos reiniciar o seu atendimento, Por favor digite 'OK'";
+      client
+        .sendText(message.from, texto)
+        .then(() => {
+          console.log("Mensagem enviada.");
+        })
+        .catch((error) => {
+          console.error("Erro ao enviar mensagem", error);
+        });
     }
   });
 }
 
-create()
+venom
+  .create({ session: sessionName })
   .then((client) => start(client))
   .catch((error) => {
-    console.log(error);
+    console.error("Erro ao criar o cliente:", error);
+    process.exit(1); // Termina o processo com um código de erro
   });
